@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<run>
+    <tool>
+        <title>Gaussian process</title>
+        <about>Gives various samples for a Gaussian process</about>
+        <command>python @tool/main.py @driver</command>
+    </tool>
+    <input>
+        <number id="lengthscale">
+            <about>
+                <label>Lengthscale</label>
+                <description>The lengthscle used to calculate the squared exponential matrix in a Gaussian process.</description>
+            </about>
+            <default>1</default>
+            <min>0</min>
+        </number>
+        <number id="signal_strength">
+            <about>
+                <label>Signal strength</label>
+                <description>The signal strength to be used to calculate the squared esponential covariance matrix for the Gaussian process.</description>
+            </about>
+            <default>1</default>
+            <min>0</min>
+        </number>
+        <number id="noise_variance">
+            <about>
+                <label>Noise variance</label>
+                <description>The noise of the process.</description>
+            </about>
+            <default>1e-12</default>
+        </number>
+        <number id="num_samples">
+            <about>
+                <label>Number of samples</label>
+                <description>The numbre of samples you want for the process.</description>
+            </about>
+            <default>1</default>
+            <min>1</min>
+        </number>
+    </input>
+    <output>
+        <curve id="value5">
+            <about>
+                <label>Functions</label>
+                <description>Returns functions from the function space with mean zero and a given covariance matrix.</description>
+            </about>
+            <xaxis>
+                <label>x</label>
+                <description>The domain of the functions</description>
+            </xaxis>
+            <yaxis>
+                <label>f</label>
+                <description>The value of the functions at different points</description>
+            </yaxis>
+        </curve>
+    </output>
+</run>
