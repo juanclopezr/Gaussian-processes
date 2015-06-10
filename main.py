@@ -16,16 +16,36 @@ io = Rappture.library(sys.argv[1])
 #########################################################
 
 # get input value for input.number(lengthscale)
-lengthscale = float(io.get('input.number(lengthscale).current'))
+lengthscale = float(io.get('input.phase(values).group(inputpara).number(lengthscale).current'))
 
 # get input value for input.number(signal_strength)
-signal_strength = float(io.get('input.number(signal_strength).current'))
+signal_strength = float(io.get('input.phase(values).group(inputpara).number(signal_strength).current'))
 
 # get input value for input.number(noise_variance)
-noise_variance = float(io.get('input.number(noise_variance).current'))
+noise_variance = float(io.get('input.phase(values).group(inputpara).number(noise_variance).current'))
 
 # get input value for input.number(num_samples)
-num_samples = float(io.get('input.number(num_samples).current'))
+num_samples = int(io.get('input.phase(values).integer(num_samples).current'))
+
+# get input value for input.phase(values).boolean(manual)
+# returns value as string "yes" or "no"
+manual = io.get('input.phase(values).boolean(manual).current') == 'yes'
+
+# get input value for input.phase(values).boolean(3dim)
+# returns value as string "yes" or "no"
+dim3 = io.get('input.phase(values).boolean(3dim).current') == 'yes'
+
+# get input value for input.phase(values).group(axes).number(xminimum)
+xminimum = float(io.get('input.phase(values).group(axes).number(xminimum).current'))
+
+# get input value for input.phase(values).group(axes).number(yminimum)
+yminimum = float(io.get('input.phase(values).group(axes).number(yminimum).current'))
+
+# get input value for input.phase(values).group(axes).number(xmaximum)
+xmaximum = float(io.get('input.phase(values).group(axes).number(xmaximum).current'))
+
+# get input value for input.phase(values).group(axes).number(ymaximum)
+ymaximum = float(io.get('input.phase(values).group(axes).number(ymaximum).current'))
 
 
 #########################################################
@@ -88,9 +108,15 @@ def sample_gp(X, cov_fun=se_cov, num_samples=1, noise_variance=1e-12, **cov_para
     f = np.dot(L, z)
     return f.T
     
-cov_fun=se_cov
-x = np.linspace(-3, 3, 50)[:, None]
-f = sample_gp(x, num_samples=5, cov_fun=cov_fun, s=signal_strength, ell=lengthscale)
+x = np.zeros(500)
+f = np.zeros((num_samples, 500))
+
+if dim3:
+	print 'fun'
+else:
+	cov_fun=se_cov
+	x = np.linspace(xminimum, xmaximum, 500)[:, None]
+	f = sample_gp(x, num_samples=5, cov_fun=cov_fun, s=signal_strength, ell=lengthscale)
 
 # spit out progress messages as you go along...
 Rappture.Utils.progress(0, "Starting...")
@@ -102,13 +128,22 @@ Rappture.Utils.progress(100, "Done")
 # Save output values back to Rappture
 #########################################################
 
-# save output value for output.curve(value5)
-# this shows just one (x,y) point -- modify as needed
-for j in xrange(5):
-    for i in xrange(x.shape[0]):
-        line = "%g %g" % (x[i],f.T[i, j])
-        io.put('output.curve(value5).component.xy', line, append=1)
+# save output value for output.curve(valuei), depending on the number of samples
+# this shows all the points of the functions
 
+for j in xrange(num_samples):
+	line = ""
+	for i in xrange(x.shape[0]):
+		line += "%g %g\n" % (x[i],f.T[i, j])
+	temp = 'output.curve(value%d)' % (j)
+	temp1 = 'Function%d' % (j)
+	io.put(temp+'.about.label', temp1, append=1)
+	io.put(temp+'.about.description', 'Function from the Gaussian process', append=1)
+	io.put(temp+'.xaxis.label', 'x', append=1)
+	io.put(temp+'.xaxis.description', 'The domain of the function from the Gaussian process', append=1)
+	io.put(temp+'.yaxis.label', 'f', append=1)
+	io.put(temp+'.yaxis.description', 'The range of the function from the Gaussian process', append=1)
+	io.put(temp+'.component.xy', line, append=1)
 
 Rappture.result(io)
 sys.exit()

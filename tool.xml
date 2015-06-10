@@ -2,56 +2,128 @@
 <run>
     <tool>
         <title>Gaussian process</title>
-        <about>Gives various samples for a Gaussian process</about>
+        <about>This tool takes samples from a Gaussian process, given a covriance kernel or an exponential covariance matrix given the lengthscale, signal strength and noise variance.</about>
         <command>python @tool/main.py @driver</command>
     </tool>
     <input>
-        <number id="lengthscale">
+        <phase id="introduction">
             <about>
-                <label>Lengthscale</label>
-                <description>The lengthscle used to calculate the squared exponential matrix in a Gaussian process.</description>
+                <label>Introduction</label>
+                <description>Gives the user the possibility to see a set of instructions before using the tool.</description>
             </about>
-            <default>1</default>
-            <min>0</min>
-        </number>
-        <number id="signal_strength">
+            <note id="instructions">
+                <contents>file://docs/Documentation.html</contents>
+            </note>
+        </phase>
+        <phase id="values">
             <about>
-                <label>Signal strength</label>
-                <description>The signal strength to be used to calculate the squared esponential covariance matrix for the Gaussian process.</description>
+                <label>Parameters</label>
+                <description>Please enter the desired parameters for the simulation in here.</description>
             </about>
-            <default>1</default>
-            <min>0</min>
-        </number>
-        <number id="noise_variance">
-            <about>
-                <label>Noise variance</label>
-                <description>The noise of the process.</description>
-            </about>
-            <default>1e-12</default>
-        </number>
-        <number id="num_samples">
-            <about>
-                <label>Number of samples</label>
-                <description>The numbre of samples you want for the process.</description>
-            </about>
-            <default>1</default>
-            <min>1</min>
-        </number>
+            <boolean id="manual">
+                <about>
+                    <label>Manual input</label>
+                    <description>Choose between entering the covariance kernel manually or have it calculated according to the exponential covariance formula.</description>
+                </about>
+                <default>no</default>
+            </boolean>
+            <integer id="num_samples">
+                <about>
+                    <label>Number of samples</label>
+                    <description>The number of samples to take from the gaussian process.</description>
+                </about>
+                <default>1</default>
+                <min>0</min>
+            </integer>
+            <boolean id="dim3">
+                <about>
+                    <label>3-D</label>
+                    <description>Allows you to choose between a two dimensional output and a three dimensional output.</description>
+                </about>
+                <default>no</default>
+            </boolean>
+            <group id="axes">
+                <about>
+                    <label>Axes</label>
+                    <description>The axes for your plot</description>
+                </about>
+                <number id="xminimum">
+                    <about>
+                        <label>Min x</label>
+                        <description>The minimum value for your x axis.</description>
+                    </about>
+                    <default>0</default>
+                </number>
+                <number id="yminimum">
+                    <about>
+                        <label>Min y</label>
+                        <description>The minimum value for your y axis.</description>
+                    </about>
+                    <default>0</default>
+                </number>
+                <number id="xmaximum">
+                    <about>
+                        <label>Max x</label>
+                        <description>The maximum value for your x axis.</description>
+                    </about>
+                    <default>1</default>
+                </number>
+                <number id="ymaximum">
+                    <about>
+                        <label>Max y</label>
+                        <description>The maximum value for your y axis.</description>
+                    </about>
+                    <default>1</default>
+                </number>
+            </group>
+            <group id="inputpara">
+                <about>
+                    <label>Input parameters</label>
+                    <description>The parameters of your process.</description>
+                </about>
+                <number id="lengthscale">
+                    <about>
+                        <label>Lengthscale</label>
+                        <description>This parameter is used to calculate the covariance matrix according to the exponential covariance formula.</description>
+                    </about>
+                    <default>1</default>
+                    <min>0</min>
+                </number>
+                <number id="signal_strength">
+                    <about>
+                        <label>Signal strength</label>
+                        <description>This parameter is used to calculate the covariance matrix according to the exponential formula.</description>
+                    </about>
+                    <default>1</default>
+                    <min>0</min>
+                </number>
+                <number id="noise_variance">
+                    <about>
+                        <label>Noise variance</label>
+                        <description>It stabilizes the Cholesky decomposition of the covariance matirx. It is the noise of the process.</description>
+                    </about>
+                    <default>1e-12</default>
+                    <min>0</min>
+                </number>
+            </group>
+        </phase>
     </input>
     <output>
-        <curve id="value5">
-            <about>
-                <label>Functions</label>
-                <description>Returns functions from the function space with mean zero and a given covariance matrix.</description>
-            </about>
-            <xaxis>
-                <label>x</label>
-                <description>The domain of the functions</description>
-            </xaxis>
-            <yaxis>
-                <label>f</label>
-                <description>The value of the functions at different points</description>
-            </yaxis>
-        </curve>
+        <mesh id="thegrid">
+			<dim>2</dim><units>um</units>
+			<grid>
+				<xaxis></xaxis>
+				<yaxis></yaxis>
+			</grid>
+		</mesh>
+		<field id="z">
+			<about>
+				<label>Functions from the Gaussian process</label>
+				<description>The two dimensional functions sampled from the Gaussian process.</description>
+			</about>
+			<component>
+				<mesh>output.mesh(thegrid)</mesh>
+			</component>
+		</field>
     </output>
 </run>
