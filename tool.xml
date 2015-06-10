@@ -27,7 +27,7 @@
                 </about>
                 <default>no</default>
             </boolean>
-            <integer id="num_samples">
+            <integer id="n_samples">
                 <about>
                     <label>Number of samples</label>
                     <description>The number of samples to take from the gaussian process.</description>
@@ -37,7 +37,7 @@
             </integer>
             <boolean id="dim3">
                 <about>
-                    <label>3-D</label>
+                    <label>2-D</label>
                     <description>Allows you to choose between a two dimensional output and a three dimensional output.</description>
                 </about>
                 <default>no</default>
@@ -53,28 +53,28 @@
                         <description>The minimum value for your x axis.</description>
                     </about>
                     <default>0</default>
-                </number>
+                </number><!--
                 <number id="yminimum">
                     <about>
                         <label>Min y</label>
                         <description>The minimum value for your y axis.</description>
                     </about>
                     <default>0</default>
-                </number>
+                </number>-->
                 <number id="xmaximum">
                     <about>
                         <label>Max x</label>
                         <description>The maximum value for your x axis.</description>
                     </about>
                     <default>1</default>
-                </number>
+                </number><!--
                 <number id="ymaximum">
                     <about>
                         <label>Max y</label>
                         <description>The maximum value for your y axis.</description>
                     </about>
                     <default>1</default>
-                </number>
+                </number>-->
             </group>
             <group id="inputpara">
                 <about>
@@ -97,7 +97,7 @@
                     <default>1</default>
                     <min>0</min>
                 </number>
-                <number id="noise_variance">
+                <number id="noise_var">
                     <about>
                         <label>Noise variance</label>
                         <description>It stabilizes the Cholesky decomposition of the covariance matirx. It is the noise of the process.</description>
@@ -108,22 +108,4 @@
             </group>
         </phase>
     </input>
-    <output>
-        <mesh id="thegrid">
-			<dim>2</dim><units>um</units>
-			<grid>
-				<xaxis></xaxis>
-				<yaxis></yaxis>
-			</grid>
-		</mesh>
-		<field id="z">
-			<about>
-				<label>Functions from the Gaussian process</label>
-				<description>The two dimensional functions sampled from the Gaussian process.</description>
-			</about>
-			<component>
-				<mesh>output.mesh(thegrid)</mesh>
-			</component>
-		</field>
-    </output>
 </run>

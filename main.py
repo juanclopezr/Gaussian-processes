@@ -22,10 +22,10 @@ lengthscale = float(io.get('input.phase(values).group(inputpara).number(lengthsc
 signal_strength = float(io.get('input.phase(values).group(inputpara).number(signal_strength).current'))
 
 # get input value for input.number(noise_variance)
-noise_variance = float(io.get('input.phase(values).group(inputpara).number(noise_variance).current'))
+noise_var = float(io.get('input.phase(values).group(inputpara).number(noise_var).current'))
 
-# get input value for input.number(num_samples)
-num_samples = int(io.get('input.phase(values).integer(num_samples).current'))
+# get input value for input.number(n_samples)
+n_samples = int(io.get('input.phase(values).integer(n_samples).current'))
 
 # get input value for input.phase(values).boolean(manual)
 # returns value as string "yes" or "no"
@@ -33,20 +33,20 @@ manual = io.get('input.phase(values).boolean(manual).current') == 'yes'
 
 # get input value for input.phase(values).boolean(3dim)
 # returns value as string "yes" or "no"
-dim3 = io.get('input.phase(values).boolean(3dim).current') == 'yes'
+dim3 = io.get('input.phase(values).boolean(dim3).current') == 'yes'
 
 # get input value for input.phase(values).group(axes).number(xminimum)
 xminimum = float(io.get('input.phase(values).group(axes).number(xminimum).current'))
-
+"""
 # get input value for input.phase(values).group(axes).number(yminimum)
 yminimum = float(io.get('input.phase(values).group(axes).number(yminimum).current'))
-
+"""
 # get input value for input.phase(values).group(axes).number(xmaximum)
 xmaximum = float(io.get('input.phase(values).group(axes).number(xmaximum).current'))
-
+"""
 # get input value for input.phase(values).group(axes).number(ymaximum)
 ymaximum = float(io.get('input.phase(values).group(axes).number(ymaximum).current'))
-
+"""
 
 #########################################################
 #  Add your code here for the main body of your program
@@ -94,7 +94,7 @@ def sample_gp(X, cov_fun=se_cov, num_samples=1, noise_variance=1e-12, **cov_para
     
     :param X:              The input points on which we will sample the GP.
     :param cov_fun:        The covariance function we use.
-    :param num_samples:    The number of samples to take.
+    :param n_samples:    The number of samples to take.
     :param noise_variance: The noise of the process.
     :param cov_params:     Any parameters of the covariance function.
     """
@@ -109,14 +109,31 @@ def sample_gp(X, cov_fun=se_cov, num_samples=1, noise_variance=1e-12, **cov_para
     return f.T
     
 x = np.zeros(500)
-f = np.zeros((num_samples, 500))
+f = np.zeros((n_samples, 500))
+y = np.zeros(50)
+F = np.zeros((n_samples, 50, 50))
 
 if dim3:
-	print 'fun'
+	io.put('output.mesh(thegrid).dim', '%d' % (2), append=1)
+	io.put('output.mesh(thegrid).units', 'um', append=1)
+	io.put('output.mesh(thegrid).grid.xaxis.min', '%d' % (xminimum), append=1)
+	io.put('output.mesh(thegrid).grid.xaxis.max', '%d' % (xmaximum), append=1)
+	io.put('output.mesh(thegrid).grid.xaxis.numpoints', '%d' % (50), append=1)
+	io.put('output.mesh(thegrid).grid.yaxis.min', '%d' % (xminimum), append=1)
+	io.put('output.mesh(thegrid).grid.yaxis.max', '%d' % (xmaximum), append=1)
+	io.put('output.mesh(thegrid).grid.yaxis.numpoints', '%d' % (50), append=1)
+	cov_fun=se_cov
+	y = np.linspace(xminimum, xmaximum, 50)[:, None]
+#y = np.linspace(xminimum, xmaximum, 50)[:, None]
+	X1, X2 = np.meshgrid(y, y)
+	X = np.hstack([X1.flatten()[:, None], X2.flatten()[:, None]])
+	f1 = sample_gp(X, num_samples=n_samples, noise_variance=noise_var, cov_fun=cov_fun, s=signal_strength, ell=lengthscale)
+	F = f1.reshape((n_samples, ) + X1.shape)
+	
 else:
 	cov_fun=se_cov
 	x = np.linspace(xminimum, xmaximum, 500)[:, None]
-	f = sample_gp(x, num_samples=5, cov_fun=cov_fun, s=signal_strength, ell=lengthscale)
+	f = sample_gp(x, num_samples=n_samples, noise_variance=noise_var, cov_fun=cov_fun, s=signal_strength, ell=lengthscale)
 
 # spit out progress messages as you go along...
 Rappture.Utils.progress(0, "Starting...")
@@ -130,20 +147,32 @@ Rappture.Utils.progress(100, "Done")
 
 # save output value for output.curve(valuei), depending on the number of samples
 # this shows all the points of the functions
-
-for j in xrange(num_samples):
-	line = ""
-	for i in xrange(x.shape[0]):
-		line += "%g %g\n" % (x[i],f.T[i, j])
-	temp = 'output.curve(value%d)' % (j)
-	temp1 = 'Function%d' % (j)
-	io.put(temp+'.about.label', temp1, append=1)
-	io.put(temp+'.about.description', 'Function from the Gaussian process', append=1)
-	io.put(temp+'.xaxis.label', 'x', append=1)
-	io.put(temp+'.xaxis.description', 'The domain of the function from the Gaussian process', append=1)
-	io.put(temp+'.yaxis.label', 'f', append=1)
-	io.put(temp+'.yaxis.description', 'The range of the function from the Gaussian process', append=1)
-	io.put(temp+'.component.xy', line, append=1)
+if dim3:
+	for j in xrange(n_samples):
+		line = ""
+		for i in xrange(y.shape[0]):
+			for l in xrange(y.shape[0]):
+				line += "%g " % F[j, i, l]
+			line += "\n"
+		temp = 'output.field(values%d)' % (j)
+		temp1 = 'Function%d' % (j)
+		io.put(temp+'.about.label', temp1, append=1)
+		io.put(temp+'.component.mesh', 'output.mesh(thegrid)', append=1)
+		io.put(temp+'.component.values', line, append=1)
+else:
+	for j in xrange(n_samples):
+		line = ""
+		for i in xrange(x.shape[0]):
+			line += "%g %g\n" % (x[i],f.T[i, j])
+		temp = 'output.curve(value%d)' % (j)
+		temp1 = 'Function%d' % (j)
+		io.put(temp+'.about.label', temp1, append=1)
+		io.put(temp+'.about.description', 'Function from the Gaussian process', append=1)
+		io.put(temp+'.xaxis.label', 'x', append=1)
+		io.put(temp+'.xaxis.description', 'The domain of the function from the Gaussian process', append=1)
+		io.put(temp+'.yaxis.label', 'f', append=1)
+		io.put(temp+'.yaxis.description', 'The range of the function from the Gaussian process', append=1)
+		io.put(temp+'.component.xy', line, append=1)
 
 Rappture.result(io)
 sys.exit()
